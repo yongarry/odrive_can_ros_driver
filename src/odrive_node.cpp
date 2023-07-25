@@ -8,7 +8,6 @@ std::vector<std::string> axis_names_list;
 std::vector<int> axis_can_ids_list;
 std::vector<std::string> axis_directions_list;
 std::vector<odrive::ODriveAxis *> odrive_axises;
-ros::Subscriber can_bridge_received_messages_sub;
 
 bool intsAreDistinct(std::vector<int> arr) {
     std::unordered_set<int> s;
@@ -27,8 +26,13 @@ bool stringsAreDistinct(std::vector<std::string> arr) {
     return (s.size() == arr.size());
 }
 
-void canReceivedMessagesCallback(const can_msgs::Frame::ConstPtr& msg) {
-    ROS_INFO("I heard from: [%02x]", msg->id);
+void BoolMessagesCallback(const std_msgs::Bool::ConstPtr& msg) {
+    if ( msg->data)
+    {
+        for (int i = 0; i < (int)odrive_axises.size(); i++) {
+            odrive_axises[i]->engage();
+        }
+    }
 }
 
 void onShutdown(int sig) {
@@ -70,6 +74,8 @@ int main(int argc, char** argv) {
     node.getParam("axis_can_ids", axis_can_ids_list);
     node.getParam("axis_directions", axis_directions_list);
 
+    cl_ctrl_sub = node.subscribe<std_msgs::Bool>("/motor_cl_ctrl", 1, &BoolMessagesCallback);
+
     if (!(axis_names_list.size() == axis_can_ids_list.size() && axis_can_ids_list.size() ==
         axis_directions_list.size())) {
         ROS_ERROR("axis_names, axis_can_ids and axis_can_directions must be of an equal size");
@@ -97,6 +103,7 @@ int main(int argc, char** argv) {
         odrive_axises.push_back(new odrive::ODriveAxis(&node, axis_names_list[i], axis_can_ids_list[i], 
             axis_directions_list[i]));
     }
+    
     signal(SIGINT, onShutdown);
 	ros::spin();
 	return 0;

@@ -3,6 +3,7 @@
 
 #include <ros/ros.h>
 #include <std_msgs/Float64.h>
+#include <std_msgs/Bool.h>
 #include <unordered_set>
 #include <can_msgs/Frame.h>
 
@@ -10,5 +11,8 @@
 #define DEFAULT_CAN_BITRATE         250000
 #define DEFAULT_ENGAGE_ON_STARTUP   false
 #define DEFAULT_DISENGAGE_ON_SHUTDOWN   true
+
+ros::Subscriber cl_ctrl_sub;
+
 
 #endif // ODRIVE_NODE_HPP_
